@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto news feed monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body class="bg-neutral-900 text-white">
+    <div class="container mx-auto p-8">
+        <div class="flex items-center relative m-10">
+            <a href="/">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Crypto news feed monitor", height="100", width="100">
+            </a>
+            <h1 class="text-7xl font-bold text-center px-8">All news containing "{{ keyword }}"</h1>
+        </div>
+        
+        {% if messages %}
+        <ul class="list-none list-inside px-12">
+            {% for message in messages %}
+                <li class="mb-8">
+                    <h2 class="text-2xl font-bold">{{ message[0] }}</h2>
+                    <p class="text-lg">{{ message[1] }}</p>
+                    <p class="text-lg">Source: <a target="_blank" class="text-purple-800 hover:text-purple-900" href="{{ message[2] }}">{{ message[2] }}</a></p>
+                    <p class="text-lg">Date: {{ message[3] }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-2xl py-4 px-12 mt-12">No news found for the specified keyword.</p>
+        {% endif %}
+
+        <footer class="bottom-0 left-0 w-full py-4 px-4 mt-12">
+            <div class="container mx-auto flex justify-between items-center px-8 md:py-8">
+                <h2 class="text-sm md:text-lg">Made with &hearts;</h2>
+                <div class="flex justify-center">
+                    <button onclick="scrollToTop()" class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-4 px-6 rounded" style="bottom: 20px;">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" class="text-white font-bold rounded pr-2" onclick="toggleDarkMode()">
+                        <i id="mode-icon" class="fas fa-sun text-2xl"></i>
+                    </button>
+                    <p class="text-sm md:text-lg mr-4">v1.0.1</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+<script>
+    // Fonction pour récupérer la valeur du cookie 'theme'
+    function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Au chargement de la page, appliquer le thème stocké dans le cookie
+    const body = document.querySelector('body');
+    const currentTheme = getCookie('theme');
+    if (currentTheme === 'dark') {
+        body.classList.add('bg-gray-300', 'text-gray-800');
+        const modeIcon = document.getElementById('mode-icon');
+        modeIcon.classList.remove('fa-sun');
+        modeIcon.classList.add('fa-moon');
+        modeIcon.style.color = "black";
+    }
+
+    function toggleDarkMode() {
+        // Récupération de l'élément de l'icône du mode
+        const modeIcon = document.getElementById('mode-icon');
+
+        // Basculer entre les classes CSS pour le bouton
+        const button = document.querySelector('button');
+
+        // Basculer entre les thèmes clair et sombre pour la page
+        body.classList.toggle('bg-gray-300');
+        body.classList.toggle('text-gray-800');
+
+        // Changer l'icône du mode en conséquence
+        if (modeIcon.classList.contains('fa-sun')) {
+            modeIcon.classList.remove('fa-sun');
+            modeIcon.classList.add('fa-moon');
+            modeIcon.style.color = "black";
+        } else {
+            modeIcon.classList.remove('fa-moon');
+            modeIcon.classList.add('fa-sun');
+            modeIcon.style.color = "white";
+        }
+
+        // Récupération de la valeur actuelle du cookie 'theme'
+        const currentTheme = getCookie('theme');
+
+        // Vérifier si le thème actuel est "sombre" ou "clair"
+        const isDarkModeEnabled = body.classList.contains('bg-gray-300') && body.classList.contains('text-gray-800');
+
+        // Définir la valeur du cookie 'theme'
+        const expirationDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Expiration après 365 jours
+        document.cookie = `theme=${isDarkModeEnabled ? 'dark' : 'light'}; expires=${expirationDate.toUTCString()}; path=/`;
+    }
+
+        // Fonction retour en haut de page
+    function scrollToTop() {
+        const scrollDuration = 500; // Durée de l'animation (ms)
+        const scrollStep = -window.scrollY / (scrollDuration / 15);
+        const scrollInterval = setInterval(() => {
+            if (window.scrollY !== 0) {
+                window.scrollBy(0, scrollStep);
+            } else {
+                clearInterval(scrollInterval);
+            }
+        }, 15);
+
+        // Cacher le bouton de retour en haut de page si l'utilisateur n'a pas scrollé vers le bas
+        const backToTopButton = document.querySelector('.back-to-top-button');
+        if (backToTopButton && window.scrollY === 0) {
+            backToTopButton.style.display = 'none';
+        }
+    }
+
+    // Afficher le bouton de retour en haut de page lorsque l'utilisateur a scrollé vers le bas
+    window.addEventListener('scroll', () => {
+        const backToTopButton = document.querySelector('.back-to-top-button');
+        if (backToTopButton) {
+            if (window.scrollY > 0) {
+                backToTopButton.style.display = 'block';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        }
+    });
+</script>
+</html>      

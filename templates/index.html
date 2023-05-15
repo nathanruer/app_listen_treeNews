@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto news feed monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body class="bg-neutral-900 text-white">
+    <div class="container mx-auto p-8">
+        <div class="flex flex-col md:flex-row justify-center items-center m-10">
+            <a href="/">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Crypto news feed monitor" height="100" width="100">
+            </a>
+            <h1 class="text-4xl md:text-7xl font-bold text-center md:text-left ml-0 md:ml-4">Crypto news feed monitor</h1>
+        </div>
+
+        <div class="flex justify-center mb-20">
+            <button class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-4 px-6 rounded">
+                <a href="/messages" class="text-lg md:text-2xl">View all news</a>
+            </button>
+        </div>
+
+        <h2 class="text-2xl md:text-xl font-bold mb-4 text-center">Filter parameters</h2>
+        <form action="/messages/filter" method="GET" class="mb-5">
+            <div class="flex flex-col md:flex-row items-center justify-center">
+                <label for="date" class="mr-4 font-bold mb-2 md:mb-0">Enter date (YYYY-MM-DD):</label>
+                <input type="text" id="date" name="date"
+                       class="border rounded px-4 py-2 leading-tight focus:outline-none focus:shadow-outline text-neutral-900 mr-4 mb-4 md:mb-0"
+                       pattern="\d{4}-\d{2}-\d{2}"
+                       title="Please enter a date in the format YYYY-MM-DD (e.g. 2023-03-25)"
+                       placeholder="2000-01-01">                
+
+                <label for="keyword" class="mr-4 font-bold mb-2 md:mb-0">Enter keyword:</label>
+                <input type="text" id="keyword" name="keyword"
+                       class="border rounded px-4 py-2 leading-tight focus:outline-none focus:shadow-outline text-neutral-900 mr-4 mb-4 md:mb-0"
+                       placeholder="Keyword">
+
+                <button type="submit"
+                        class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-4 rounded">
+                    Filter
+                </button>
+            </div>
+        </form>
+
+        <footer class="bottom-0 left-0 w-full py-4 px-4">
+            <div class="container mx-auto flex justify-between items-center px-8 md:py-8">
+                <h2 class="text-sm md:text-lg">Made with &hearts;</h2>
+                <div class="flex justify-end">
+                    <button type="button" class="text-white font-bold rounded pr-2" onclick="toggleDarkMode()">
+                        <i id="mode-icon" class="fas fa-sun text-2xl"></i>
+                    </button>
+                    <p class="text-sm md:text-lg mr-4">v1.0.1</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+<script>
+    // Fonction pour récupérer la valeur du cookie 'theme'
+    function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Au chargement de la page, appliquer le thème stocké dans le cookie
+    const body = document.querySelector('body');
+    const currentTheme = getCookie('theme');
+    if (currentTheme === 'dark') {
+        body.classList.add('bg-gray-300', 'text-gray-800');
+        const modeIcon = document.getElementById('mode-icon');
+        modeIcon.classList.remove('fa-sun');
+        modeIcon.classList.add('fa-moon');
+        modeIcon.style.color = "black";
+    }
+
+    function toggleDarkMode() {
+        // Récupération de l'élément de l'icône du mode
+        const modeIcon = document.getElementById('mode-icon');
+
+        // Basculer entre les classes CSS pour le bouton
+        const button = document.querySelector('button');
+
+        // Basculer entre les thèmes clair et sombre pour la page
+        body.classList.toggle('bg-gray-300');
+        body.classList.toggle('text-gray-800');
+
+        // Changer l'icône du mode en conséquence
+        if (modeIcon.classList.contains('fa-sun')) {
+            modeIcon.classList.remove('fa-sun');
+            modeIcon.classList.add('fa-moon');
+            modeIcon.style.color = "black";
+        } else {
+            modeIcon.classList.remove('fa-moon');
+            modeIcon.classList.add('fa-sun');
+            modeIcon.style.color = "white";
+        }
+
+        // Récupération de la valeur actuelle du cookie 'theme'
+        const currentTheme = getCookie('theme');
+
+        // Vérifier si le thème actuel est "sombre" ou "clair"
+        const isDarkModeEnabled = body.classList.contains('bg-gray-300') && body.classList.contains('text-gray-800');
+
+        // Définir la valeur du cookie 'theme'
+        const expirationDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Expiration après 365 jours
+        document.cookie = `theme=${isDarkModeEnabled ? 'dark' : 'light'}; expires=${expirationDate.toUTCString()}; path=/`;
+    }
+
+    // Fonction retour en haut de page
+    function scrollToTop() {
+        const scrollDuration = 500; // Durée de l'animation (ms)
+        const scrollStep = -window.scrollY / (scrollDuration / 15);
+        
+        const scrollInterval = setInterval(() => {
+            if (window.scrollY !== 0) {
+            window.scrollBy(0, scrollStep);
+            } else {
+            clearInterval(scrollInterval);
+            }
+        }, 15);
+    }
+</script>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All recent news</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body class="bg-neutral-900 text-white">
+    <div class="container mx-auto p-8">
+        <div class="flex items-center relative m-10">
+            <a href="/">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Crypto news feed monitor", height="100", width="100">
+            </a>
+            <h1 class="text-7xl font-bold text-center px-8">All recent news</h1>
+        </div>
+
+        <ul class="list-none list-inside px-12" id="message-list">
+            {% for message in messages %}
+                <li class="mb-8">
+                    <h2 class="text-2xl font-bold">{{ message[0] }}</h2>
+                    <p class="text-lg">{{ message[1] }}</p>
+                    <p class="text-lg">Source: <a target="_blank" class="text-purple-800 hover:text-purple-900" href="{{ message[2] }}">{{ message[2] }}</a></p>
+                    <p class="text-lg">Date: {{ message[3] }}</p>
+                </li>
+            {% endfor %}
+
+            <button class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-4 px-6 rounded load-more">Load more messages</button>
+        </ul>
+
+        <footer class="bottom-0 left-0 w-full py-4 px-4 mt-12">
+            <div class="container mx-auto flex justify-between items-center px-8 md:py-8">
+                <h2 class="text-sm md:text-lg">Made with &hearts;</h2>
+                <div class="flex justify-center">
+                    <button onclick="scrollToTop()" class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-4 px-6 rounded" style="bottom: 20px;">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" class="text-white font-bold rounded pr-2" onclick="toggleDarkMode()">
+                        <i id="mode-icon" class="fas fa-sun text-2xl"></i>
+                    </button>
+                    <p class="text-sm md:text-lg mr-4">v1.0.1</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+<script>
+    const messageList = document.getElementById('message-list');
+  
+    // Création d'une instance WebSocket
+    const ws = new WebSocket('wss://news.treeofalpha.com/ws');
+  
+    // Écoute de l'événement "message" du WebSocket
+    ws.addEventListener('message', event => {
+      const message = JSON.parse(event.data);
+  
+      // Convertir le timestamp en un objet Date
+      const messageTime = new Date(message.time);
+  
+      // Formater la date et l'heure dans le fuseau horaire de l'utilisateur
+      const dateOptions = { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+      const dateString = messageTime.toISOString().substr(0, 10);
+      const timeString = messageTime.toLocaleTimeString(undefined, { timeZone: dateOptions.timeZone, hour12: false, hourCycle: 'h23' });
+
+  
+      // Ajout du nouveau message à la liste
+      const listItem = document.createElement('li');
+      listItem.classList.add('mb-8');
+  
+      let sourceLink = message.link || message.url;
+  
+      let body = message.body ? `<p class="text-lg">${message.body}</p>` : '';
+  
+      listItem.innerHTML = `
+        <h2 class="text-2xl font-bold">${message.title}</h2>
+        ${body}
+        <p class="text-lg">Source: <a target="_blank" class="text-purple-800 hover:text-purple-900" href="${sourceLink}">${sourceLink}</a></p>
+        <p class="text-lg">Date: ${dateString} ${timeString}.${messageTime.getMilliseconds().toString().padStart(3, '0')}</p>
+      `;
+      messageList.prepend(listItem);
+    });
+
+    // Fonction pour récupérer la valeur du cookie 'theme'
+    function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Au chargement de la page, appliquer le thème stocké dans le cookie
+    const body = document.querySelector('body');
+    const currentTheme = getCookie('theme');
+    if (currentTheme === 'dark') {
+        body.classList.add('bg-gray-300', 'text-gray-800');
+        const modeIcon = document.getElementById('mode-icon');
+        modeIcon.classList.remove('fa-sun');
+        modeIcon.classList.add('fa-moon');
+        modeIcon.style.color = "black";
+    }
+
+    function toggleDarkMode() {
+        // Récupération de l'élément de l'icône du mode
+        const modeIcon = document.getElementById('mode-icon');
+
+        // Basculer entre les classes CSS pour le bouton
+        const button = document.querySelector('button');
+
+        // Basculer entre les thèmes clair et sombre pour la page
+        body.classList.toggle('bg-gray-300');
+        body.classList.toggle('text-gray-800');
+
+        // Changer l'icône du mode en conséquence
+        if (modeIcon.classList.contains('fa-sun')) {
+            modeIcon.classList.remove('fa-sun');
+            modeIcon.classList.add('fa-moon');
+            modeIcon.style.color = "black";
+        } else {
+            modeIcon.classList.remove('fa-moon');
+            modeIcon.classList.add('fa-sun');
+            modeIcon.style.color = "white";
+        }
+
+        // Récupération de la valeur actuelle du cookie 'theme'
+        const currentTheme = getCookie('theme');
+
+        // Vérifier si le thème actuel est "sombre" ou "clair"
+        const isDarkModeEnabled = body.classList.contains('bg-gray-300') && body.classList.contains('text-gray-800');
+
+        // Définir la valeur du cookie 'theme'
+        const expirationDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Expiration après 365 jours
+        document.cookie = `theme=${isDarkModeEnabled ? 'dark' : 'light'}; expires=${expirationDate.toUTCString()}; path=/`;
+    }
+
+    // Fonction retour en haut de page
+    function scrollToTop() {
+        const scrollDuration = 500; // Durée de l'animation (ms)
+        const scrollStep = -window.scrollY / (scrollDuration / 15);
+        
+        const scrollInterval = setInterval(() => {
+            if (window.scrollY !== 0) {
+            window.scrollBy(0, scrollStep);
+            } else {
+            clearInterval(scrollInterval);
+            }
+        }, 15);
+    }
+
+    // Fonction charger plus de messages
+    const loadMoreBtn = document.querySelector(".load-more");
+    let offset = 10; // 10 messages initialement
+
+    // Masquer le bouton si moins de 10 messages sont disponibles
+    const hideLoadMoreBtn = () => {
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = "none";
+        }
+    }
+
+    hideLoadMoreBtn(); // Cacher le bouton au début
+
+    fetch(`/messages?offset=0`)
+        .then(response => response.text())
+        .then(data => {
+            const parser = new DOMParser();
+            const messages = parser.parseFromString(data, "text/html").querySelectorAll("li");
+            if (messages.length >= 10) { // Si 10 messages ou plus, afficher le bouton
+                loadMoreBtn.style.display = "block";
+            }
+        });
+
+    loadMoreBtn.addEventListener("click", () => {
+        fetch(`/messages?offset=${offset}`)
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const newMessages = parser.parseFromString(data, "text/html").querySelectorAll("li");
+
+                const messagesList = document.querySelector("ul");
+                newMessages.forEach(message => messagesList.appendChild(message));
+
+                offset += 10; // Incrémente 10 par 10
+
+                // Déplacer le bouton vers le bas de la liste
+                messagesList.appendChild(loadMoreBtn);
+
+                // Vérifier si tous les messages ont été chargés et retirer le bouton si nécessaire
+                if (newMessages.length < 10) {
+                    hideLoadMoreBtn();
+                }
+            })
+            .catch(error => console.log(error));
+    });
+</script>  
+</html>
